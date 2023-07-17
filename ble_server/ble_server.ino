@@ -22,6 +22,7 @@
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
+#include <iostream>
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
@@ -47,8 +48,23 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
+void measure_fsr(int index) {
+  if (index >= sizeof(fsr_vals)/sizeof(fsr_vals[0])) {
+    throw std::invalid_argument("Tried to write to an FSR index that was out of bounds");
+  }
+  for(int i = 0; i < sizeof(fsr_vals[0])/sizeof(fsr_vals[0][0]); i++) {
+    int val = analogRead(i);
+    fsr_vals[index][i] = val;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
+
+  // Set pins into input mode
+  for (int i = 0; i <= 8; i++) {
+    pinMode(i, INPUT);
+  }
 
   // Create the BLE Device
   BLEDevice::init("FMG_Band");
@@ -91,8 +107,7 @@ void loop() {
         if (value % 10 == 0) {
           Serial.println("Updating 10th value");
         }
-        //pCharacteristic->setValue((uint8_t*)&data, 4);
-        pCharacteristic->setValue((uint8_t*)&fsr_vals, 8); // THIS LINE IS SUS. FIGURE IT OUT JAMES.
+        pCharacteristic->setValue((uint8_t*)&fsr_vals, 8);
         pCharacteristic->notify();
         value++;
         delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
