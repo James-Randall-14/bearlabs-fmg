@@ -14,7 +14,7 @@ async def run_client(queue: asyncio.Queue):
         exit()
 
     async def callback_handler(_, data):
-        decoded_data = int.from_bytes(data, "big")
+        decoded_data = list(data)
         print(decoded_data)
 
     async def spin():

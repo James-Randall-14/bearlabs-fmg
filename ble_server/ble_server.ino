@@ -21,7 +21,6 @@
 */
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <BLEUtils.h>
 #include <BLE2902.h>
 
 BLEServer* pServer = NULL;
@@ -29,6 +28,7 @@ BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 uint32_t value = 0;
+uint8_t fsr_vals[20][8] = {0};
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -77,7 +77,7 @@ void setup() {
   pService->start();
 
   // Start advertising
-  Serial.println("Waiting a client...");
+  Serial.println("Waiting on a client...");
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(false);
@@ -91,10 +91,11 @@ void loop() {
         if (value % 10 == 0) {
           Serial.println("Updating 10th value");
         }
-        pCharacteristic->setValue((uint8_t*)&value, 4);
+        //pCharacteristic->setValue((uint8_t*)&data, 4);
+        pCharacteristic->setValue((uint8_t*)&fsr_vals, 8); // THIS LINE IS SUS. FIGURE IT OUT JAMES.
         pCharacteristic->notify();
         value++;
-        delay(10); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+        delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
