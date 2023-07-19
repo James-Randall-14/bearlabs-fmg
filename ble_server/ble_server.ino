@@ -120,7 +120,7 @@ void loop() {
           x = 0;
         }
 
-        //delay(3); // If msgs are sent too quickly, BLE can get congested.
+        delay(3); // If msgs are sent too quickly, BLE can get congested.
     }
 
     // disconnecting
