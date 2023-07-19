@@ -28,8 +28,9 @@ BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t value = 0;
-uint8_t fsr_vals[20][8] = {0};
+int x; // index variable. Not called index for redefinition reasons
+uint16_t fsr_vals[20][8] = {0};
+
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -48,18 +49,19 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
-void measure_fsr(int index) {
-  if (index >= sizeof(fsr_vals)/sizeof(fsr_vals[0])) {
+void measure_fsrs(int outer_index) {
+  if (outer_index >= sizeof(fsr_vals)/sizeof(fsr_vals[0])) {
     throw std::invalid_argument("Tried to write to an FSR index that was out of bounds");
   }
   for(int i = 0; i < sizeof(fsr_vals[0])/sizeof(fsr_vals[0][0]); i++) {
-    int val = analogRead(i);
-    fsr_vals[index][i] = val;
+    uint16_t val = analogRead(i + 1); // Analog input pins are pins 1-8
+    fsr_vals[outer_index][i] = val;
   }
 }
 
 void setup() {
   Serial.begin(115200);
+  analogReadResolution(12); // Tinys3 has a ADC resolution of 12 bits
 
   // Set pins into input mode
   for (int i = 0; i <= 8; i++) {
@@ -104,14 +106,23 @@ void setup() {
 void loop() {
     // notify changed value
     if (deviceConnected) {
-        if (value % 10 == 0) {
-          Serial.println("Updating 10th value");
-        }
-        pCharacteristic->setValue((uint8_t*)&fsr_vals, 8);
+
+        measure_fsrs(x);
+
+        pCharacteristic->setValue((uint8_t*)&fsr_vals, 160);
         pCharacteristic->notify();
-        value++;
-        delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+
+        x += 1;
+
+        // Reset index so we don't overflow
+        if (x >= 20) {
+          Serial.println("Reached end of array");
+          x = 0;
+        }
+
+        //delay(3); // If msgs are sent too quickly, BLE can get congested.
     }
+
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
         Serial.println("Disconnected");
@@ -120,6 +131,7 @@ void loop() {
         Serial.println("Restarting advertising");
         oldDeviceConnected = deviceConnected;
     }
+
     // connecting
     if (deviceConnected && !oldDeviceConnected) {
         Serial.println("Connecting to a new device");
