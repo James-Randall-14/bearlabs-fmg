@@ -1,5 +1,9 @@
 import asyncio
 import bleak
+import aiofiles
+from aiocsv import AsyncWriter
+from datetime import datetime, date
+
 
 # Global Variable Definition
 CHARACTERISTIC_UUID = "4b974cb0-aa54-48fa-8bcc-e82e030362e2"
@@ -9,11 +13,15 @@ async def run_client():
 
     async def callback_handler(_, data):
         megalist = list(data)
+        #print(megalist)
         fsr_list = await split_list(megalist)
         print(fsr_list)
+        async with aiofiles.open(csvname, 'a', newline='\n') as csvfile:
+            writer = AsyncWriter(csvfile, delimiter=',')
+            await writer.writerows(fsr_list)
 
-    async def split_list(input): # Split up the mega-list into a 20x8 2D list
-        fsr_list = [[0]*8]*20
+    async def split_list(input): # Split up the mega-list into a 2D list
+        fsr_list = [[0] * 8 for i in range(int(len(input) / 8))]
         for i in range(len(input)):
             fsr_list[int(i / 8)][i % 8] = input[i]
         return fsr_list
@@ -41,6 +49,12 @@ async def run_client():
     if device is None:
         print("Could not find device")
         exit()
+
+    # Create CSV file for logging data
+    now = datetime.now()
+    current_date = date.today()
+    current_time = now.strftime("%H-%M-%S")
+    csvname = "{}_{}.csv".format(current_date, current_time)
 
     print("Trying to create a client...")
     async with bleak.BleakClient(device) as client:

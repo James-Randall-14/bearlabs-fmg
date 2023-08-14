@@ -29,7 +29,7 @@ BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 int x; // index variable. Not called index for redefinition reasons
-uint16_t fsr_vals[20][8] = {0};
+uint16_t fsr_vals[64][8] = {0};
 
 
 // See the following for generating UUIDs:
@@ -109,18 +109,16 @@ void loop() {
 
         measure_fsrs(x);
 
-        pCharacteristic->setValue((uint8_t*)&fsr_vals, 160);
-        pCharacteristic->notify();
-
         x += 1;
 
-        // Reset index so we don't overflow
-        if (x >= 20) {
-          Serial.println("Reached end of array");
-          x = 0;
+        // Reset index so we don't oob
+        if (x >= 64) {
+            pCharacteristic->setValue((uint8_t*)&fsr_vals, 512);
+            pCharacteristic->notify();
+            Serial.println("Reached end of array");
+            x = 0;
+            //delay(2); // If msgs are sent too quickly, BLE can get congested.
         }
-
-        delay(3); // If msgs are sent too quickly, BLE can get congested.
     }
 
     // disconnecting
