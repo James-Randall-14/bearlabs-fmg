@@ -13,9 +13,7 @@ async def run_client():
 
     async def callback_handler(_, data):
         megalist = list(data)
-        #print(megalist)
         fsr_list = await split_list(megalist)
-        print(fsr_list)
         async with aiofiles.open(csvname, 'a', newline='\n') as csvfile:
             writer = AsyncWriter(csvfile, delimiter=',')
             await writer.writerows(fsr_list)
@@ -44,7 +42,7 @@ async def run_client():
     print("Searching for FMG Band...")
     try: device = await bleak.BleakScanner.find_device_by_name("FMG_Band", timeout=10)
     except asyncio.exceptions.CancelledError:
-        print("Operations cancelled by user")
+        print("Operations ended by user")
         exit()
     if device is None:
         print("Could not find device")
@@ -58,7 +56,7 @@ async def run_client():
 
     print("Trying to create a client...")
     async with bleak.BleakClient(device) as client:
-        print("Connected")
+        print("Connected. Beginning to collect data. Press CTRL + c to exit.")
         await client.start_notify(CHARACTERISTIC_UUID, callback_handler)
         await spin()
 
