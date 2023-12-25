@@ -59,17 +59,6 @@ So to minimize this delay, the microcontroller samples 64 times, and then sends 
 
 The BLE client program creates a connection to the BLE server, and it's responsible for parsing the long array back into the samples from the FSRs. For now, it just records the data into a .csv file. Take a look at `example.csv` to see what that looks like.
 
-## Issues and Future Improvements
-As the project stands right now, the band itself is unassembled. The PLA housings have all been finalized and printed, but the TPE pads have yet to be manufactured.
-
-There are several major areas that need to be completed before the band is finished.
-
-* Electrical assembly is not done
-* The boa clip has not yet been integrated into the band
-* There is a bug in `ble_client` that causes the connection to time out occasionally
-* The FSRs need to be embedded into the housings and connected to the microcontroller
-* The TPE pads need to be printed and attached to the housings.
-
 If there are any questions, please email me at randallj24@student.jhs.net or text me at 801-347-6334.
 
 ---
